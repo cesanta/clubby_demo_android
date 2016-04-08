@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    >
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:id="@+id/id_psk_form"
+        >
+
+        <!-- Device ID -->
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="horizontal"
+            >
+            <TextView
+                style="@style/AppBaseTheme"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/device_id"
+                />
+
+            <EditText
+                style="@style/AppBaseTheme"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/edit_device_id"
+                />
+        </LinearLayout>
+
+        <!-- Device Psk -->
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="horizontal"
+            >
+            <TextView
+                style="@style/AppBaseTheme"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/device_psk"
+                />
+
+            <EditText
+                style="@style/AppBaseTheme"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/edit_device_psk"
+                />
+        </LinearLayout>
+
+        <TextView
+          style="@style/AppBaseTheme"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/register_account"
+          android:autoLink="web"
+          android:layout_centerInParent="true"
+          android:linksClickable="true"
+          android:textSize="9pt"
+          />
+
+    </LinearLayout>
+
+    <!-- Connect / Disconnect -->
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        >
+        <Button
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.5"
+            android:id="@+id/btn_connect"
+            android:text="@string/connect"
+            />
+
+        <Button
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.5"
+            android:id="@+id/btn_disconnect"
+            android:text="@string/disconnect"
+            />
+    </LinearLayout>
+
+    <!-- Talk-to-cloud controls -->
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:id="@+id/cloud_controls_form"
+        >
+
+        <!-- Separator -->
+        <ImageView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="3dp"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:paddingTop="0dp"
+            android:scaleType="fitXY"
+            android:src="?android:attr/listDivider" />
+
+        <TextView
+            style="@style/AppBaseTheme"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/talk_to_backend"
+            />
+
+        <!-- Talk-to-backend buttons -->
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            >
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:id="@+id/btn_send_hello"
+                android:text="@string/hello"
+                />
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:id="@+id/btn_send_route_stats"
+                android:text="@string/route_stats"
+                />
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:id="@+id/btn_send_metrics_pub"
+                android:text="@string/metrics_pub"
+                />
+        </LinearLayout>
+
+        <TextView
+            style="@style/AppBaseTheme"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/talk_to_demo"
+            android:autoLink="web"
+            android:id="@+id/text_talk_to_demo"
+            android:layout_centerInParent="true"
+            android:linksClickable="true"
+            />
+
+        <!-- LCD.AddLine -->
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="horizontal"
+            >
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/btn_lcd_add_line"
+                android:text="@string/lcd_add_line"
+                android:background="@drawable/btn_demo_selector"
+                />
+            <EditText
+                style="@style/AppBaseTheme"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/edit_lcd_add_line"
+                />
+        </LinearLayout>
+
+        <!-- LED.Set / LED.Get-->
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="horizontal"
+            >
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/btn_led_set"
+                android:text="@string/led_set"
+                android:layout_weight="0.25"
+                android:background="@drawable/btn_demo_selector"
+                />
+            <EditText
+                style="@style/AppBaseTheme"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/edit_led_set"
+                android:layout_weight="0.25"
+                android:text="0.5"
+                />
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/btn_led_get"
+                android:text="@string/led_get"
+                android:layout_weight="0.25"
+                android:background="@drawable/btn_demo_selector"
+                />
+            <TextView
+                style="@style/AppBaseTheme"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/text_led_get"
+                android:layout_weight="0.25"
+                android:text="..."
+                />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Log -->
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="horizontal"
+        >
+        <ScrollView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_weight="0.5"
+            >
+
+            <EditText
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:textSize="9pt"
+                android:id="@+id/log"
+                />
+
+        </ScrollView>
+    </LinearLayout>
+</LinearLayout>
