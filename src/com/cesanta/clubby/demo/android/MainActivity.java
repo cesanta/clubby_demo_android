@@ -334,10 +334,10 @@ public class MainActivity extends Activity {
                         new PublishArgsVarFirst("temperature")
                         .add("sensor", "1")
                         .add("someAnotherLabel", "hey"),
-                        123
+                        123.0
                         )
                     ),
-                new MetricsService.PublishAdapter() {
+                new CmdAdapter<MetricsService.PublishResponse>() {
                     @Override
                     public void onResponse(MetricsService.PublishResponse response) {
                         println("Got response on Metrics.Publish: OK");
@@ -355,7 +355,7 @@ public class MainActivity extends Activity {
         println("Sending Dispatcher.Hello...");
         dispatcher.hello(
                 new DispatcherService.HelloArgs(),
-                new DispatcherService.HelloAdapter() {
+                new CmdAdapter<DispatcherService.HelloResponse>() {
                     @Override
                     public void onResponse(DispatcherService.HelloResponse response) {
                         println("Got response on Dispatcher.Hello: OK");
@@ -373,10 +373,9 @@ public class MainActivity extends Activity {
     private void sendDispatcherRouteStats() {
         println("Sending Dispatcher.RouteStats...");
         dispatcher.routeStats(
-                new DispatcherService.RouteStatsArgs(
-                    getEnteredText(R.id.edit_device_id)
-                    ),
-                new DispatcherService.RouteStatsAdapter() {
+                new DispatcherService.RouteStatsArgs()
+                .id(getEnteredText(R.id.edit_device_id)),
+                new CmdAdapter<DispatcherService.RouteStatsResponse>() {
                     @Override
                     public void onResponse(
                             DispatcherService.RouteStatsResponse response
