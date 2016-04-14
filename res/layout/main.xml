@@ -111,113 +111,110 @@
             android:scaleType="fitXY"
             android:src="?android:attr/listDivider" />
 
-        <TextView
-            style="@style/AppBaseTheme"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/talk_to_backend"
-            />
-
-        <!-- Talk-to-backend buttons -->
+        <!-- Select project -->
         <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             >
-            <Button
-                android:layout_width="fill_parent"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="0.5"
-                android:id="@+id/btn_send_hello"
-                android:text="@string/hello"
-                />
-            <Button
-                android:layout_width="fill_parent"
+                android:orientation="horizontal"
+                android:layout_weight="0.2"
+                >
+                <TextView
+                    style="@style/AppBaseTheme"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/select_project"
+                    />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="0.5"
-                android:id="@+id/btn_send_route_stats"
-                android:text="@string/route_stats"
-                />
-            <Button
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.5"
-                android:id="@+id/btn_send_metrics_pub"
-                android:text="@string/metrics_pub"
-                />
+                android:orientation="horizontal"
+                android:layout_weight="0.8"
+                >
+                <Spinner
+                    android:id="@+id/spn_projects"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="0pt"
+                    />
+            </LinearLayout>
         </LinearLayout>
 
-        <TextView
-            style="@style/AppBaseTheme"
-            android:layout_width="wrap_content"
+        <!-- Select device -->
+        <LinearLayout
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="@string/talk_to_demo"
-            android:autoLink="web"
-            android:id="@+id/text_talk_to_demo"
-            android:layout_centerInParent="true"
-            android:linksClickable="true"
-            />
+            android:orientation="horizontal"
+            >
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_weight="0.2"
+                >
+                <TextView
+                    style="@style/AppBaseTheme"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/select_device"
+                    />
+            </LinearLayout>
 
-        <!-- LCD.AddLine -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_weight="0.8"
+                >
+                <Spinner
+                    android:id="@+id/spn_devices"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="0pt"
+                    />
+            </LinearLayout>
+        </LinearLayout>
+
+
+        <!-- Pin switch -->
+
         <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:orientation="horizontal"
             >
+
             <Button
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:id="@+id/btn_lcd_add_line"
-                android:text="@string/lcd_add_line"
-                android:background="@drawable/btn_demo_selector"
+                android:id="@+id/btn_pin_number"
+                android:text="@string/pin_number"
+                android:layout_weight="0.5"
                 />
-            <EditText
-                style="@style/AppBaseTheme"
-                android:layout_width="fill_parent"
+
+            <Switch
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:id="@+id/edit_lcd_add_line"
+                android:id="@+id/btn_pin_toggle"
+                android:layout_weight="0.5"
                 />
+
         </LinearLayout>
 
-        <!-- LED.Set / LED.Get-->
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:orientation="horizontal"
-            >
-            <Button
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/btn_led_set"
-                android:text="@string/led_set"
-                android:layout_weight="0.25"
-                android:background="@drawable/btn_demo_selector"
-                />
-            <EditText
-                style="@style/AppBaseTheme"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/edit_led_set"
-                android:layout_weight="0.25"
-                android:text="0.5"
-                />
-            <Button
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/btn_led_get"
-                android:text="@string/led_get"
-                android:layout_weight="0.25"
-                android:background="@drawable/btn_demo_selector"
-                />
-            <TextView
-                style="@style/AppBaseTheme"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/text_led_get"
-                android:layout_weight="0.25"
-                android:text="..."
-                />
-        </LinearLayout>
+        <TextView
+            style="@style/AppBaseTheme"
+            android:id="@+id/error_msg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/select_device"
+            android:textColor="#FF0000"
+            />
 
     </LinearLayout>
 

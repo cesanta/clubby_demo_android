@@ -1,13 +1,10 @@
 package com.cesanta.clubby.demo.android;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.cesanta.cloud.DispatcherService;
-import com.cesanta.cloud.DispatcherService.RouteStatsResponseItem;
-import com.cesanta.cloud.MetricsService;
-import com.cesanta.cloud.MetricsService.PublishArgs;
-import com.cesanta.cloud.MetricsService.PublishArgsVar;
-import com.cesanta.cloud.MetricsService.PublishArgsVarFirst;
+import com.cesanta.cloud.ProjectService;
 import com.cesanta.clubby.lib.Clubby;
 import com.cesanta.clubby.lib.ClubbyAdapter;
 import com.cesanta.clubby.lib.ClubbyListener;
@@ -20,9 +17,14 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
@@ -31,23 +33,34 @@ public class MainActivity extends Activity {
     private static final String PREFS_NAME = "clubby";
 
     private Clubby clubby = null;
-    private MetricsService metrics = null;
-    private DispatcherService dispatcher = null;
+    private ProjectService project = null;
 
     private EditText guiEditDeviceId;
     private EditText guiEditDevicePsk;
     private Button guiBtnConnect;
     private Button guiBtnDisconnect;
-    private Button guiBtnSendHello;
-    private Button guiBtnSendRouteStats;
-    private Button guiBtnSendMetricsPub;
-    private Button guiBtnLcdAddLine;
-    private Button guiBtnLedSet;
-    private Button guiBtnLedGet;
     private EditText guiTextLog;
-    private TextView guiTextLedGet;
     private LinearLayout guiLayoutIdPskForm;
     private LinearLayout guiLayoutCloudControls;
+    private Spinner guiSpnProjects;
+    private Spinner guiSpnDevices;
+    private Button guiBtnPinNumber;
+    private Switch guiSwitchPinState;
+    private TextView guiTextErrorMsg;
+
+    private List<String> projectNames = new ArrayList<String>();
+    private List<String> projectIds = new ArrayList<String>();
+    private List<String> deviceIds = new ArrayList<String>();
+
+    private ArrayAdapter<String> projectsAdapter;
+    private ArrayAdapter<String> devicesAdapter;
+
+    private int pinNumber = 0;
+    private Boolean pinState = null;
+    private String selectedDeviceId = null;
+    private String errorMsg = null;
+
+    private boolean trackPinState = true;
 
     private void loadPrefs() {
         EditText et;
@@ -60,8 +73,7 @@ public class MainActivity extends Activity {
         et = (EditText)findViewById(R.id.edit_device_psk);
         et.setText(sett.getString("devicePsk", "your_psk"));
 
-        et = (EditText)findViewById(R.id.edit_lcd_add_line);
-        et.setText(sett.getString("lcdAddLine", "Hi from Android!"));
+        pinNumber = sett.getInt("pinNumber", 0);
     }
 
     private void savePrefs() {
@@ -70,7 +82,7 @@ public class MainActivity extends Activity {
 
         editor.putString("deviceId", getEnteredText(R.id.edit_device_id));
         editor.putString("devicePsk", getEnteredText(R.id.edit_device_psk));
-        editor.putString("lcdAddLine", getEnteredText(R.id.edit_lcd_add_line));
+        editor.putInt("pinNumber", pinNumber);
 
         editor.commit();
     }
@@ -111,15 +123,15 @@ public class MainActivity extends Activity {
 
             clubby.addListener(clubbyListener);
 
-            metrics = MetricsService.createInstance(clubby);
-            dispatcher = DispatcherService.createInstance(clubby);
+            project = ProjectService.createInstance(clubby);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
         }
     }
 
-    private void guiApply(final ClubbyState clubbyState) {
+    private void guiApply() {
+        final ClubbyState clubbyState = clubby.getState();
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -132,12 +144,12 @@ public class MainActivity extends Activity {
 
                         guiBtnConnect.setEnabled(true);
                         guiBtnDisconnect.setEnabled(false);
-                        guiBtnSendHello.setEnabled(false);
-                        guiBtnSendRouteStats.setEnabled(false);
-                        guiBtnSendMetricsPub.setEnabled(false);
-                        guiBtnLcdAddLine.setEnabled(false);
-                        guiBtnLedSet.setEnabled(false);
-                        guiBtnLedGet.setEnabled(false);
+
+                        projectNames.clear();
+                        projectIds.clear();
+                        deviceIds.clear();
+                        selectedDeviceId = null;
+                        pinState = null;
                         break;
 
                     case CONNECTING:
@@ -149,12 +161,6 @@ public class MainActivity extends Activity {
 
                         guiBtnConnect.setEnabled(false);
                         guiBtnDisconnect.setEnabled(false);
-                        guiBtnSendHello.setEnabled(false);
-                        guiBtnSendRouteStats.setEnabled(false);
-                        guiBtnSendMetricsPub.setEnabled(false);
-                        guiBtnLcdAddLine.setEnabled(false);
-                        guiBtnLedSet.setEnabled(false);
-                        guiBtnLedGet.setEnabled(false);
                         break;
 
                     case CONNECTED:
@@ -165,13 +171,46 @@ public class MainActivity extends Activity {
 
                         guiBtnConnect.setEnabled(false);
                         guiBtnDisconnect.setEnabled(true);
-                        guiBtnSendHello.setEnabled(true);
-                        guiBtnSendRouteStats.setEnabled(true);
-                        guiBtnSendMetricsPub.setEnabled(true);
-                        guiBtnLcdAddLine.setEnabled(true);
-                        guiBtnLedSet.setEnabled(true);
-                        guiBtnLedGet.setEnabled(true);
                         break;
+                }
+
+                projectsAdapter.notifyDataSetChanged();
+                devicesAdapter.notifyDataSetChanged();
+
+                // Enable or disable projects/devices spinners
+                guiSpnProjects.setEnabled(projectIds.size() != 0);
+                guiSpnDevices.setEnabled(deviceIds.size() != 0);
+
+                // Apply "Pin number" button and the switcher
+                if (selectedDeviceId != null) {
+                    // Some device is selected
+                    guiBtnPinNumber.setEnabled(true);
+                    if (pinState != null) {
+                        guiSwitchPinState.setEnabled(true);
+                        trackPinState = false;
+                        guiSwitchPinState.setChecked(pinState);
+                        trackPinState = true;
+                    } else {
+                        guiSwitchPinState.setEnabled(false);
+                    }
+                } else {
+                    // No device selected: just disable pin controls
+                    guiBtnPinNumber.setEnabled(false);
+                    guiSwitchPinState.setEnabled(false);
+                }
+
+                // Set appropriate pin number on the button
+                guiBtnPinNumber.setText(
+                        getResources().getString(R.string.pin_number) + ": " + pinNumber
+                        );
+
+                // Show or hide error message
+                if (errorMsg != null) {
+                    guiTextErrorMsg.setText(errorMsg);
+                    guiTextErrorMsg.setVisibility(View.VISIBLE);
+                } else {
+                    guiTextErrorMsg.setText("");
+                    guiTextErrorMsg.setVisibility(View.GONE);
                 }
             }
         });
@@ -188,216 +227,181 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Arguments for "/v1/LCD.AddLine", will be serialized into JSON
+     * Arguments for our custom command "/v1/GPIO.Read"
      */
-    static class DemoAddLineArgs {
-        public String text;
+    static class GpioReadArgs {
+        public int pin;
 
-        DemoAddLineArgs(String text) {
-            this.text = text;
+        GpioReadArgs(int pin) {
+            this.pin = pin;
         }
-    }
-
-    private void sendLcdAddLine() {
-        println("Sending LCD.AddLine to demo...");
-
-        clubby.call(
-                "//api.cesanta.com/d/demo",
-                "/v1/LCD.AddLine",
-                new DemoAddLineArgs(
-                    getEnteredText(R.id.edit_lcd_add_line)
-                    ),
-                // We don't care about the response here, so, we use plain
-                // `Object` as the response type
-                new CmdAdapter<Object>() {
-                    @Override
-                    public void onResponse(Object resp) {
-                        println("Got positive response");
-
-                        if (resp != null) {
-                            println("Response data: " + resp);
-                        }
-                    }
-
-                    @Override
-                    public void onError(int status, String status_msg) {
-                        println("Got error: " + status_msg);
-                    }
-                },
-                Object.class
-        );
     }
 
     /**
-     * Arguments for "/v1/LED.Set", will be serialized into JSON
+     * Arguments for our custom command "/v1/GPIO.Write"
      */
-    static class DemoLedSetArgs {
-        public double value;
+    static class GpioWriteArgs {
+        public int pin;
+        public boolean state;
 
-        DemoLedSetArgs(double value) {
-            this.value = value;
+        GpioWriteArgs(int pin, boolean state) {
+            this.pin = pin;
+            this.state = state;
         }
-    }
-
-    private void sendLedSet() {
-        println("Sending LED.Set to demo...");
-
-        try {
-            double value = Double.parseDouble(getEnteredText(R.id.edit_led_set));
-
-            clubby.call(
-                    "//api.cesanta.com/d/demo",
-                    "/v1/LED.Set",
-                    new DemoLedSetArgs(value),
-                    // We don't care about the response here, so, we use plain
-                    // `Object` as the response type
-                    new CmdAdapter<Object>() {
-                        @Override
-                        public void onResponse(Object resp) {
-                            println("Got positive response");
-
-                            if (resp != null) {
-                                println("Response data: " + resp);
-                            }
-                        }
-
-                        @Override
-                        public void onError(int status, String status_msg) {
-                            println("Got error: " + status_msg);
-                        }
-                    },
-                    Object.class
-                );
-        } catch (NumberFormatException e) {
-            println("Error: " + e.toString());
-        }
-
     }
 
     /**
-     * Response of "/v1/LED.Get", will be deserialized from JSON
+     * Response of our custom commands "/v1/GPIO.Read" and "/v1/GPIO.Write",
+     * will be deserialized from JSON
      */
-    static class DemoLedGetResp {
-        private double value;
+    static class GpioResp {
+        public int pin;
+        public int state;
+    }
 
-        public double getValue() {
-            return value;
+    /**
+     * Handler of responses on both "/v1/GPIO.Read" and "/v1/GPIO.Write"
+     */
+    private class OnGpioResp extends CmdAdapter<GpioResp> {
+        @Override
+        public void onResponse(final GpioResp resp) {
+            if (resp != null) {
+                switch (resp.state) {
+                    case 0:
+                        pinState = false;
+                        break;
+                    case 1:
+                        pinState = true;
+                        break;
+                    default:
+                        pinState = null;
+                        errorMsg = getResources().getString(R.string.invalid_pin);
+                        break;
+                }
+                guiApply();
+            }
+        }
+
+        @Override
+        public void onError(int status, String status_msg) {
+            println("Got error: " + status_msg);
         }
     }
 
-    private void sendLedGet() {
-        println("Sending LED.Get to demo...");
+    /**
+     * Performs asynchronous request of the selected GPIO pin state; response
+     * is handled by the `OnGpioResp`.
+     */
+    private void getGpioState() {
 
-        guiTextLedGet.setText("...");
+        pinState = null;
+        errorMsg = null;
+        guiApply();
 
+        println("Sending GPIO.Read...");
         clubby.call(
-                "//api.cesanta.com/d/demo",
-                "/v1/LED.Get",
-                // The method "/v1/LED.Get" doesn't need any arguments, so,
-                // we can just pass `null` here
-                null,
-                // We expect response to match `DemoLedGetResp`
-                new CmdAdapter<DemoLedGetResp>() {
-                    @Override
-                    public void onResponse(final DemoLedGetResp resp) {
-                        if (resp != null) {
-                            println("Got positive response; value: "
-                                    + String.valueOf(resp.getValue()));
-
-                            // Update TextView on the Activity
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    guiTextLedGet.setText(
-                                            String.valueOf(resp.getValue())
-                                            );
-                                }
-                            });
-                        }
-                    }
-
-                    @Override
-                    public void onError(int status, String status_msg) {
-                        println("Got error: " + status_msg);
-                    }
-                },
-                DemoLedGetResp.class
+                selectedDeviceId,
+                "/v1/GPIO.Read",
+                new GpioReadArgs(pinNumber),
+                new OnGpioResp(),
+                GpioResp.class
             );
     }
 
-    private void sendMetricsPublish() {
-        println("Sending Metrics.Publish...");
-        metrics.publish(
-                new PublishArgs()
-                .var(
-                    new PublishArgsVar(
-                        new PublishArgsVarFirst("temperature")
-                        .add("sensor", "1")
-                        .add("someAnotherLabel", "hey"),
-                        123.0
-                        )
-                    ),
-                new CmdAdapter<MetricsService.PublishResponse>() {
-                    @Override
-                    public void onResponse(MetricsService.PublishResponse response) {
-                        println("Got response on Metrics.Publish: OK");
-                    }
+    /**
+     * Performs asynchronous request to set new GPIO pin state; response is
+     * handled by the `OnGpioResp`.
+     */
+    private void setGpioState(boolean newPinState) {
 
-                    @Override
-                    public void onError(int status, String status_msg) {
-                        println("Error: Status: " + status + ", msg: " + status_msg);
-                    }
-                }
-        );
+        pinState = null;
+        errorMsg = null;
+        guiApply();
+
+        println("Sending GPIO.Write...");
+        clubby.call(
+                selectedDeviceId,
+                "/v1/GPIO.Write",
+                new GpioWriteArgs(pinNumber, newPinState),
+                new OnGpioResp(),
+                GpioResp.class
+                );
     }
 
-    private void sendDispatcherHello() {
-        println("Sending Dispatcher.Hello...");
-        dispatcher.hello(
-                new DispatcherService.HelloArgs(),
-                new CmdAdapter<DispatcherService.HelloResponse>() {
-                    @Override
-                    public void onResponse(DispatcherService.HelloResponse response) {
-                        println("Got response on Dispatcher.Hello: OK");
-                    }
 
+    /**
+     * Fetches list of the projects available to the user, asynchronously. When
+     * response is received, GUI is updated accordingly.
+     */
+    private void getProjectsList() {
+        println("Retrieving projects list...");
+        project.list(
+                new ProjectService.ListArgs(),
+                new CmdAdapter<ProjectService.ListResponse>() {
                     @Override
-                    public void onError(int status, String status_msg) {
-                        println("Error: Status: " + status + ", msg: " + status_msg);
+                    public void onResponse(ProjectService.ListResponse resp) {
+                        projectNames.clear();
+                        projectIds.clear();
+
+                        for (ProjectService.ListResponseItem item : resp) {
+                            projectNames.add(item.name);
+                            projectIds.add(item.id);
+                        }
+
+                        guiApply();
                     }
                 }
                 );
-
     }
 
-    private void sendDispatcherRouteStats() {
-        println("Sending Dispatcher.RouteStats...");
-        dispatcher.routeStats(
-                new DispatcherService.RouteStatsArgs()
-                .id(getEnteredText(R.id.edit_device_id)),
-                new CmdAdapter<DispatcherService.RouteStatsResponse>() {
+    /**
+     * Fetches list of the devices in the given project, asynchronously. When
+     * response is received, GUI is updated accordingly.
+     */
+    private void getDevicesList(String projectId) {
+        println("Retrieving devices list...");
+        project.listDevices(
+                new ProjectService.ListDevicesArgs()
+                .projectid(projectId),
+                new CmdAdapter<ProjectService.ListDevicesResponse>() {
                     @Override
-                    public void onResponse(
-                            DispatcherService.RouteStatsResponse response
-                            ) {
-                        println("Got response on Dispatcher.RouteStats: OK");
+                    public void onResponse(ProjectService.ListDevicesResponse resp) {
+                        deviceIds.clear();
 
-                        RouteStatsResponseItem item
-                            = response.get(getEnteredText(R.id.edit_device_id));
-
-                        if (item != null){
-                            println("numSent=" + item.numSent);
-                        } else {
-                            println("no data");
+                        for (String item : resp) {
+                            deviceIds.add(item);
                         }
-                    }
 
-                    @Override
-                    public void onError(int status, String status_msg) {
-                        println("Error: Status: " + status + ", msg: " + status_msg);
+                        guiApply();
                     }
                 }
-        );
+                );
+    }
+
+    private void onProjectChanged() {
+
+        // Clear current devices list
+        deviceIds.clear();
+
+        // Retrieve a new one
+        long pnum = guiSpnProjects.getSelectedItemId();
+        if (pnum != AdapterView.INVALID_ROW_ID) {
+            getDevicesList(projectIds.get((int)pnum));
+        }
+
+        guiApply();
+    }
+
+    private void onDeviceChanged() {
+        selectedDeviceId = null;
+
+        long dnum = guiSpnDevices.getSelectedItemId();
+        if (dnum != AdapterView.INVALID_ROW_ID) {
+            // Some device is indeed selected: remember its id, and retrieve
+            // the state of the GPIO pin on the newly selected device
+            selectedDeviceId = deviceIds.get((int)dnum);
+            getGpioState();
+        }
     }
 
     @Override
@@ -410,16 +414,14 @@ public class MainActivity extends Activity {
         guiEditDevicePsk = (EditText)findViewById(R.id.edit_device_psk);
         guiBtnConnect = (Button)findViewById(R.id.btn_connect);
         guiBtnDisconnect = (Button)findViewById(R.id.btn_disconnect);
-        guiBtnSendHello = (Button)findViewById(R.id.btn_send_hello);
-        guiBtnSendRouteStats = (Button)findViewById(R.id.btn_send_route_stats);
-        guiBtnSendMetricsPub = (Button)findViewById(R.id.btn_send_metrics_pub);
-        guiBtnLcdAddLine = (Button)findViewById(R.id.btn_lcd_add_line);
-        guiBtnLedSet = (Button)findViewById(R.id.btn_led_set);
-        guiBtnLedGet = (Button)findViewById(R.id.btn_led_get);
         guiTextLog = (EditText)findViewById(R.id.log);
-        guiTextLedGet = (TextView)findViewById(R.id.text_led_get);
         guiLayoutIdPskForm = (LinearLayout)findViewById(R.id.id_psk_form);
         guiLayoutCloudControls = (LinearLayout)findViewById(R.id.cloud_controls_form);
+        guiSpnProjects = (Spinner)findViewById(R.id.spn_projects);
+        guiSpnDevices = (Spinner)findViewById(R.id.spn_devices);
+        guiBtnPinNumber = (Button)findViewById(R.id.btn_pin_number);
+        guiSwitchPinState = (Switch)findViewById(R.id.btn_pin_toggle);
+        guiTextErrorMsg = (TextView)findViewById(R.id.error_msg);
 
         guiTextLog.setVerticalScrollBarEnabled(true);
         guiTextLog.setKeyListener(null);
@@ -427,6 +429,44 @@ public class MainActivity extends Activity {
         loadPrefs();
 
         initClubby();
+
+        //-- init projects spinner {{{
+        projectsAdapter = new ArrayAdapter<String>(
+                MainActivity.this,
+                R.layout.spinner,
+                projectNames
+                );
+
+        guiSpnProjects.setAdapter(projectsAdapter);
+
+        guiSpnProjects.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> parent,
+                    View itemSelected, int selectedItemPosition, long selectedId) {
+                onProjectChanged();
+            }
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+        // }}}
+
+        //-- init devices spinner {{{
+        devicesAdapter = new ArrayAdapter<String>(
+                MainActivity.this,
+                R.layout.spinner,
+                deviceIds
+                );
+
+        guiSpnDevices.setAdapter(devicesAdapter);
+
+        guiSpnDevices.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> parent,
+                    View itemSelected, int selectedItemPosition, long selectedId) {
+                onDeviceChanged();
+            }
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+        // }}}
 
         guiBtnConnect.setOnClickListener(new OnClickListener() {
             @Override
@@ -443,49 +483,42 @@ public class MainActivity extends Activity {
             }
         });
 
-        guiBtnSendHello.setOnClickListener(new OnClickListener() {
+        guiBtnPinNumber.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                sendDispatcherHello();
+
+                NumberPickerDialog npd = new NumberPickerDialog(
+                        MainActivity.this,
+                        new NumberPickerDialog.ValueChangeListener(){
+                            @Override
+                            public void valueChanged(int value){
+                                pinNumber = value;
+                                getGpioState();
+                            }
+                        },
+                        pinNumber,
+                        getResources().getString(R.string.pin_number),
+                        null
+                        );
+
+                npd.setMin(0);
+                npd.setMax(100);
+
+                npd.show();
+
             }
         });
 
-        guiBtnSendRouteStats.setOnClickListener(new OnClickListener() {
+        guiSwitchPinState.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View view) {
-                sendDispatcherRouteStats();
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (trackPinState) {
+                    setGpioState(isChecked);
+                }
             }
         });
 
-        guiBtnSendMetricsPub.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                sendMetricsPublish();
-            }
-        });
-
-        guiBtnLcdAddLine.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                sendLcdAddLine();
-            }
-        });
-
-        guiBtnLedSet.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                sendLedSet();
-            }
-        });
-
-        guiBtnLedGet.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                sendLedGet();
-            }
-        });
-
-        guiApply(clubby.getState());
+        guiApply();
     }
 
     @Override public void onDestroy() {
@@ -505,6 +538,7 @@ public class MainActivity extends Activity {
         @Override
         public void onConnected(Clubby clubby) {
             println("Connected to server");
+            getProjectsList();
         }
 
         @Override
@@ -525,7 +559,7 @@ public class MainActivity extends Activity {
 
         @Override
         public void onStateChanged(Clubby clubby, ClubbyState newState) {
-            guiApply(newState);
+            guiApply();
         }
     };
 }
