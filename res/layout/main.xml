@@ -7,68 +7,6 @@
     android:orientation="vertical"
     >
 
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:id="@+id/id_psk_form"
-        >
-
-        <!-- Device ID -->
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:orientation="horizontal"
-            >
-            <TextView
-                style="@style/AppBaseTheme"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/device_id"
-                />
-
-            <EditText
-                style="@style/AppBaseTheme"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/edit_device_id"
-                />
-        </LinearLayout>
-
-        <!-- Device Psk -->
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:orientation="horizontal"
-            >
-            <TextView
-                style="@style/AppBaseTheme"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/device_psk"
-                />
-
-            <EditText
-                style="@style/AppBaseTheme"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/edit_device_psk"
-                />
-        </LinearLayout>
-
-        <TextView
-          style="@style/AppBaseTheme"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/register_account"
-          android:autoLink="web"
-          android:layout_centerInParent="true"
-          android:linksClickable="true"
-          android:textSize="9pt"
-          />
-
-    </LinearLayout>
-
     <!-- Connect / Disconnect -->
     <LinearLayout
         android:layout_width="fill_parent"

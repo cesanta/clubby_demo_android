@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.cesanta.cloud.ProjectService;
+import com.cesanta.cloud.auth.CloudAuthenticator;
+import com.cesanta.cloud.auth.CloudAuthenticator.Credentials;
 import com.cesanta.clubby.lib.Clubby;
 import com.cesanta.clubby.lib.ClubbyAdapter;
 import com.cesanta.clubby.lib.ClubbyListener;
@@ -35,12 +37,9 @@ public class MainActivity extends Activity {
     private Clubby clubby = null;
     private ProjectService project = null;
 
-    private EditText guiEditDeviceId;
-    private EditText guiEditDevicePsk;
     private Button guiBtnConnect;
     private Button guiBtnDisconnect;
     private EditText guiTextLog;
-    private LinearLayout guiLayoutIdPskForm;
     private LinearLayout guiLayoutCloudControls;
     private Spinner guiSpnProjects;
     private Spinner guiSpnDevices;
@@ -62,16 +61,12 @@ public class MainActivity extends Activity {
 
     private boolean trackPinState = true;
 
+    private final CloudAuthenticator authenticator = new CloudAuthenticator(this);
+
     private void loadPrefs() {
         EditText et;
 
         SharedPreferences sett = getSharedPreferences(PREFS_NAME, 0);
-
-        et = (EditText)findViewById(R.id.edit_device_id);
-        et.setText(sett.getString("deviceId", "//api.cesanta.com/d/your_device_id"));
-
-        et = (EditText)findViewById(R.id.edit_device_psk);
-        et.setText(sett.getString("devicePsk", "your_psk"));
 
         pinNumber = sett.getInt("pinNumber", 0);
     }
@@ -80,8 +75,6 @@ public class MainActivity extends Activity {
         SharedPreferences sett = getSharedPreferences(PREFS_NAME, 0);
         SharedPreferences.Editor editor = sett.edit();
 
-        editor.putString("deviceId", getEnteredText(R.id.edit_device_id));
-        editor.putString("devicePsk", getEnteredText(R.id.edit_device_psk));
         editor.putInt("pinNumber", pinNumber);
 
         editor.commit();
@@ -107,7 +100,7 @@ public class MainActivity extends Activity {
         });
     }
 
-    private void initClubby() {
+    private void initClubby(String id, String key) {
         try {
             if (clubby != null) {
                 clubby.removeListener(clubbyListener);
@@ -115,10 +108,8 @@ public class MainActivity extends Activity {
             }
 
             clubby = new Clubby.Builder()
-                .device(
-                        getEnteredText(R.id.edit_device_id),
-                        getEnteredText(R.id.edit_device_psk)
-                       )
+                .device(id, key)
+                .backend("//api3.cesanta.com")
                 .build();
 
             clubby.addListener(clubbyListener);
@@ -137,12 +128,9 @@ public class MainActivity extends Activity {
             public void run() {
                 switch (clubbyState) {
                     case NOT_CONNECTED:
-                        guiEditDeviceId.setEnabled(true);
-                        guiEditDevicePsk.setEnabled(true);
-                        guiLayoutIdPskForm.setVisibility(View.VISIBLE);
                         guiLayoutCloudControls.setVisibility(View.GONE);
 
-                        guiBtnConnect.setEnabled(true);
+                        guiBtnConnect.setEnabled(!authenticator.isDialogVisible());
                         guiBtnDisconnect.setEnabled(false);
 
                         projectNames.clear();
@@ -154,9 +142,6 @@ public class MainActivity extends Activity {
 
                     case CONNECTING:
                     case DISCONNECTING:
-                        guiEditDeviceId.setEnabled(false);
-                        guiEditDevicePsk.setEnabled(false);
-                        guiLayoutIdPskForm.setVisibility(View.VISIBLE);
                         guiLayoutCloudControls.setVisibility(View.GONE);
 
                         guiBtnConnect.setEnabled(false);
@@ -164,9 +149,6 @@ public class MainActivity extends Activity {
                         break;
 
                     case CONNECTED:
-                        guiEditDeviceId.setEnabled(false);
-                        guiEditDevicePsk.setEnabled(false);
-                        guiLayoutIdPskForm.setVisibility(View.GONE);
                         guiLayoutCloudControls.setVisibility(View.VISIBLE);
 
                         guiBtnConnect.setEnabled(false);
@@ -214,6 +196,25 @@ public class MainActivity extends Activity {
                 }
             }
         });
+    }
+
+    private void cloudAuth() {
+        authenticator.auth(new CloudAuthenticator.Listener() {
+            @Override
+            public void onAuthenticated(Credentials cred) {
+                initClubby(cred.id, cred.key);
+                connect();
+            }
+
+            @Override
+            public void onCancelled() {
+                guiApply();
+
+                // When auth is cancelled, close the activity immediately
+                finish();
+            }
+        });
+        guiApply();
     }
 
     private void connect() {
@@ -410,12 +411,9 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        guiEditDeviceId = (EditText)findViewById(R.id.edit_device_id);
-        guiEditDevicePsk = (EditText)findViewById(R.id.edit_device_psk);
         guiBtnConnect = (Button)findViewById(R.id.btn_connect);
         guiBtnDisconnect = (Button)findViewById(R.id.btn_disconnect);
         guiTextLog = (EditText)findViewById(R.id.log);
-        guiLayoutIdPskForm = (LinearLayout)findViewById(R.id.id_psk_form);
         guiLayoutCloudControls = (LinearLayout)findViewById(R.id.cloud_controls_form);
         guiSpnProjects = (Spinner)findViewById(R.id.spn_projects);
         guiSpnDevices = (Spinner)findViewById(R.id.spn_devices);
@@ -428,7 +426,7 @@ public class MainActivity extends Activity {
 
         loadPrefs();
 
-        initClubby();
+        initClubby("", "");
 
         //-- init projects spinner {{{
         projectsAdapter = new ArrayAdapter<String>(
@@ -471,14 +469,14 @@ public class MainActivity extends Activity {
         guiBtnConnect.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                initClubby();
-                connect();
+                cloudAuth();
             }
         });
 
         guiBtnDisconnect.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+                authenticator.clearAuthData();
                 disconnect();
             }
         });
@@ -518,7 +516,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        guiApply();
+        cloudAuth();
     }
 
     @Override public void onDestroy() {
