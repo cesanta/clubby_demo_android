@@ -2,7 +2,43 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.cesanta</groupId>
   <artifactId>clubby-demo-android</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.2-SNAPSHOT</version>
+  <name>Cesanta Clubby Demo for Android</name>
+  <description>Cesanta Clubby Demo for Android</description>
+  <url>https://github.com/cesanta/clubby_demo_android</url>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>scm:git:git@github.com:cesanta/clubby_demo_android.git</url>
+    <connection>scm:git:git@github.com:cesanta/clubby_demo_android.git</connection>
+  </scm>
+  <developers>
+    <developer>
+      <id>dfrank</id>
+      <name>Dmitry Frank</name>
+      <email>dmitry.frank@cesanta.com</email>
+      <timezone>UTC+2</timezone>
+    </developer>
+  </developers>
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+  </properties>
   <build>
     <sourceDirectory>gen</sourceDirectory>
     <resources>
@@ -28,12 +64,12 @@
     <dependency>
       <groupId>com.cesanta</groupId>
       <artifactId>cloud-service-stubs</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
+      <version>0.0.2-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.cesanta</groupId>
       <artifactId>clubby</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
+      <version>0.0.2-SNAPSHOT</version>
     </dependency>
   </dependencies>
 </project>
