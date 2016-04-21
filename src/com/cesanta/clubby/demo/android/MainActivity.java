@@ -110,6 +110,7 @@ public class MainActivity extends Activity {
             clubby = new Clubby.Builder()
                 .device(id, key)
                 .backend("//api3.cesanta.com")
+                .timeout(5)
                 .build();
 
             clubby.addListener(clubbyListener);
