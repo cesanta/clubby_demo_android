@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.cesanta</groupId>
   <artifactId>clubby-demo-android</artifactId>
-  <version>0.0.2-SNAPSHOT</version>
+  <version>0.0.3-SNAPSHOT</version>
   <name>Cesanta Clubby Demo for Android</name>
   <description>Cesanta Clubby Demo for Android</description>
   <url>https://github.com/cesanta/clubby_demo_android</url>
@@ -64,12 +64,12 @@
     <dependency>
       <groupId>com.cesanta</groupId>
       <artifactId>cloud-service-stubs</artifactId>
-      <version>0.0.2-SNAPSHOT</version>
+      <version>0.0.3-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.cesanta</groupId>
       <artifactId>clubby</artifactId>
-      <version>0.0.2-SNAPSHOT</version>
+      <version>0.0.3-SNAPSHOT</version>
     </dependency>
   </dependencies>
 </project>
