@@ -108,7 +108,8 @@ public class MainActivity extends Activity {
             }
 
             clubby = new Clubby.Builder()
-                .device(id, key)
+                .id(id)
+                .psk(key)
                 .backend("//api3.cesanta.com")
                 .timeout(5)
                 .build();
